@@ -204,22 +204,38 @@ def main_loop(stdscr):
 
 
     # Game over screen
-    stdscr.clear() 
-    # Calculate center position for messages
-    # Note: game.height here refers to the game board, not necessarily screen height
-    center_y = game_height // 2 
-    center_x_offset_msg = len("Game Over!") // 2
-    center_x_offset_score = len(f"Score: {game.score}") // 2
-    center_x_offset_exit = len("Press any key to exit.") // 2
+    stdscr.clear()
+    screen_height, screen_width = stdscr.getmaxyx()
 
-    # Ensure messages are within screen bounds if game board is large
-    # This is a simplified centering for the game board area.
-    # For true screen centering, stdscr.getmaxyx() would be used.
+    msg_game_over = "Game Over!"
+    # Adjust y_game_over to be clearly on screen, e.g., screen_height // 2 might be too low if screen_height is small
+    y_game_over = max(0, screen_height // 2 - 2) 
+    x_game_over = max(0, screen_width // 2 - len(msg_game_over) // 2)
+    if y_game_over < screen_height and x_game_over + len(msg_game_over) <= screen_width:
+        stdscr.addstr(y_game_over, x_game_over, msg_game_over)
+
+    msg_score = f"Score: {game.score}"
+    y_score = y_game_over + 1
+    x_score = max(0, screen_width // 2 - len(msg_score) // 2)
+    if y_score < screen_height and x_score + len(msg_score) <= screen_width:
+        stdscr.addstr(y_score, x_score, msg_score)
+
+    msg_exit = "Press any key to exit."
+    y_exit = max(0, screen_height - 2) # Near the bottom
+    x_exit = max(0, screen_width // 2 - len(msg_exit) // 2)
     
-    stdscr.addstr(center_y, game_width // 2 - center_x_offset_msg, "Game Over!")
-    stdscr.addstr(center_y + 1, game_width // 2 - center_x_offset_score, f"Score: {game.score}")
-    stdscr.addstr(center_y + 3, game_width // 2 - center_x_offset_exit, "Press any key to exit.")
-    
+    if y_exit < screen_height and x_exit + len(msg_exit) < screen_width: # Use < screen_width for x_exit + len
+        stdscr.addstr(y_exit, x_exit, msg_exit)
+    else:
+        # Fallback if screen is too small or msg_exit is too long
+        fallback_msg_exit = "Exit: Any key" # Shorter message
+        x_fallback_exit = max(0, screen_width // 2 - len(fallback_msg_exit) // 2)
+        if y_exit < screen_height and x_fallback_exit + len(fallback_msg_exit) < screen_width:
+             stdscr.addstr(y_exit, x_fallback_exit, fallback_msg_exit)
+        else: # Absolute fallback if screen is tiny
+            stdscr.addstr(max(0, screen_height - 1), 0, "Exit")
+
+
     stdscr.nodelay(False) # Make getch blocking for the final key press
     stdscr.getch()
 
